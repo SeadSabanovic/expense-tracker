@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   Button,
   InputAdornment,
@@ -13,13 +13,18 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import "dayjs/locale/en-gb";
 import dayjs from "dayjs";
 
-export default function NewExpenseForm() {
-  const datePickerRef = useRef(null);
+export default function NewExpenseForm(props) {
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState(false);
   const [amount, setAmount] = useState(0);
   const [amountError, setAmountError] = useState(false);
   const [date, setDate] = useState(dayjs());
+
+  const clearForm = () => {
+    setName("");
+    setAmount(0);
+    setDate(dayjs());
+  };
 
   const validateName = () => {
     if (!name) {
@@ -45,18 +50,16 @@ export default function NewExpenseForm() {
   const handleSubmit = (e) => {
     e.preventDefault();
     validateForm();
-    console.log(nameError);
-    console.log(amountError);
-  };
 
-  const nameChangeHandler = (e) => {
-    setName(e.target.value);
-  };
-  const amountChangeHandler = (e) => {
-    setAmount(e.target.value);
-  };
-  const dateChangeHandler = (e) => {
-    setDate(e);
+    const expense = {
+      id: Math.random() * 1000,
+      name,
+      amount,
+      date: dayjs(date).format("DD-MM-YYYY"),
+    };
+
+    props.onAddExpense(expense);
+    clearForm();
   };
 
   return (
@@ -70,29 +73,34 @@ export default function NewExpenseForm() {
         onSubmit={(e) => handleSubmit(e)}
       >
         <TextField
-          onChange={(e) => nameChangeHandler(e)}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           onBlur={() => validateName()}
           label="Expense Name"
           variant="outlined"
           error={nameError}
+          required
         />
         <TextField
-          onChange={(e) => amountChangeHandler(e)}
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
           type="number"
           label="Expense Amount"
           variant="outlined"
+          required
           error={amountError}
           onBlur={() => validateAmount()}
           InputProps={{
+            min: 1,
             startAdornment: <InputAdornment position="start">$</InputAdornment>,
           }}
         />
         <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="en-gb">
           <DatePicker
+            required
             value={date}
-            ref={datePickerRef}
             fullWidth
-            onChange={(e) => dateChangeHandler(e)}
+            onChange={(e) => setDate(e)}
           />
         </LocalizationProvider>
         <Button type="submit" variant="contained" endIcon={<AddIcon />}>
